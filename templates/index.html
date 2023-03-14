@@ -1,0 +1,47 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ ctx_title }}</title>
+</head>
+
+<body>
+    <form id="upload-form" enctype="multipart/form-data">
+        <input type="file" name="file" id="fileSelector">
+        <div class="size"></div>
+        <button type="submit">Upload</button>
+    </form>
+
+    <script>
+        const form = document.querySelector('#upload-form');
+        fileSelector.onchange = () => {
+            function formatBytes(bytes, decimals = 2) {
+                if (!+bytes) return '0 Bytes'
+
+                const k = 1024
+                const dm = decimals < 0 ? 0 : decimals
+                const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
+
+                const i = Math.floor(Math.log(bytes) / Math.log(k))
+
+                return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`
+            }
+            let result = ""
+            let bytes = fileSelector.files[0].size
+            result = formatBytes(bytes)
+            document.querySelector('.size').textContent = result;
+        }
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const file = event.target.file.files[0];
+            const formData = new FormData();
+            formData.append('file', file);
+            await fetch("{{ url_for('upload') }}", { method: 'POST', body: formData });
+            alert('File uploaded successfully!');
+        });
+    </script>
+</body>
+
+</html>

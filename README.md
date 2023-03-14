@@ -16,4 +16,4 @@
 
 -- http://localhost:8000/upload/ - POST (file upload)
 
-# 14.03.23 21:30 - HOT FIX
+# Идёт разбирательство с AWS по поводу разблокировки

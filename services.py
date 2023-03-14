@@ -63,7 +63,7 @@ class FileHandler:
                              part_number, data, result)
             attempts += 1
 
-    def upload_to_s3(self, file: SpooledTemporaryFile) -> None:
+    def upload_to_s3(self, file: SpooledTemporaryFile) -> bool:
         """
         Загрузка файла на S3 с помощью многопоточности.
         """
@@ -85,6 +85,7 @@ class FileHandler:
 
         # Создание потоков и загрузка частей на S3.
         while True:
+            logger.info(f'LEN THREADS ========= {len(self.threads)}')
             if len(self.threads) == config.COUNT_THREADS:
                 for thread in self.threads:
                     thread.join()
@@ -93,7 +94,7 @@ class FileHandler:
             part = file.read(part_size) # Загружаем части по COUNT_MB_PER_PART_OF_THE_FILE (default 30) МБ
             if not part:
                 break
-            
+
             thread = threading.Thread(
                 target=self.upload_part, 
                 args=(filename, upload_id, part_number, part, parts)
@@ -110,10 +111,16 @@ class FileHandler:
         parts = sorted(parts, key=lambda item: item['PartNumber']) 
 
         # Завершение мультипарной загрузки и объединение частей.
-        self.S3_CLIENT.complete_multipart_upload(
-            Bucket=config.S3_BUCKET_NAME, 
-            Key=filename, 
-            UploadId=upload_id,
-            MultipartUpload={'Parts': parts}
-        )
-        logger.info(f'File {file.name} uploaded to S3 bucket {config.S3_BUCKET_NAME} with key {filename}')
+        try:
+            self.S3_CLIENT.complete_multipart_upload(
+                Bucket=config.S3_BUCKET_NAME, 
+                Key=filename, 
+                UploadId=upload_id,
+                MultipartUpload={'Parts': parts}
+            )
+            logger.info(f'File {file.name} uploaded to S3 bucket {config.S3_BUCKET_NAME} with key {filename}')
+            return True
+        except Exception as e:
+            logger.error(e)
+            logger.error(f'File {file.name} not upload')
+            return False

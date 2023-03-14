@@ -38,8 +38,15 @@
             const file = event.target.file.files[0];
             const formData = new FormData();
             formData.append('file', file);
-            await fetch("{{ url_for('upload') }}", { method: 'POST', body: formData });
-            alert('File uploaded successfully!');
+            await fetch("{{ url_for('upload') }}", { method: 'POST', body: formData })
+            .then(res => {
+                if(res.status == 200) {
+                    alert('File uploaded successfully!');
+                } else {
+                    alert('Error')
+                }
+            });
+            
         });
     </script>
 </body>
